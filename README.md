@@ -4,7 +4,7 @@
 **Senior Fullstack Developer**
 
 ## Timeframe
-**2-3 days**
+**5-7 days**
 
 ## Task Goal
 Build a **complete RGS (Remote Gaming Server) platform from scratch**:
@@ -495,7 +495,7 @@ A: `HMAC-SHA256(secretKey, JSON.stringify(body))` in hex, header `X-Signature`.
 **Q: Can I use other AI besides Claude Code?**
 A: No, only Claude Code. This is a key part of the evaluation.
 
-**Q: What if I don't finish in 2-3 days?**
+**Q: What if I don't finish in 5-7 days?**
 A: Priorities:
    1. RGS + Operator integration (CRITICAL)
    2. Game Provider (important)
