@@ -1,23 +1,23 @@
-# Техническое задание: RGS Platform — Full Stack
+# Technical Task: RGS Platform — Full Stack
 
-## Позиция
+## Position
 **Senior Fullstack Developer**
 
-## Срок выполнения
-**2-3 дня**
+## Timeframe
+**2-3 days**
 
-## Цель задания
-Создать **полноценную RGS (Remote Gaming Server) платформу с нуля**:
-1. Написать простую игру (Game Provider)
-2. Создать RGS платформу для интеграции игр
-3. Написать оператора (Casino Backend)
-4. Интегрировать всё вместе — чтобы игра запустилась у оператора
+## Task Goal
+Build a **complete RGS (Remote Gaming Server) platform from scratch**:
+1. Create a simple game (Game Provider)
+2. Build RGS platform for game integration
+3. Create an operator (Casino Backend)
+4. Integrate everything together — so the game launches from the operator
 
-Использовать **только Claude Code** как основной инструмент разработки.
+Use **only Claude Code** as the primary development tool.
 
 ---
 
-## Архитектура системы
+## System Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -52,16 +52,16 @@
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-**Три независимых сервиса:**
-1. **Game Provider** — игра с простой логикой
-2. **RGS Platform** — интеграционный слой
-3. **Operator** — казино с кошельком игроков
+**Three independent services:**
+1. **Game Provider** — game with simple logic
+2. **RGS Platform** — integration layer
+3. **Operator** — casino with player wallets
 
 ---
 
-## Часть 1: Game Provider (Игра)
+## Part 1: Game Provider (Game)
 
-Создать простую игру — например **Dice** или **Coin Flip**.
+Create a simple game — for example **Dice** or **Coin Flip**.
 
 ### Game Backend (NestJS)
 
@@ -85,13 +85,13 @@ Response: {
 }
 ```
 
-**Логика игры (Dice):**
-- Игрок выбирает "high" (>50) или "low" (≤50)
-- Генерируется число 1-100
-- Если угадал — выигрыш = ставка × 1.9
-- RNG через `crypto.randomInt()`
+**Game Logic (Dice):**
+- Player chooses "high" (>50) or "low" (≤50)
+- A number 1-100 is generated
+- If guessed correctly — win = bet × 1.9
+- RNG via `crypto.randomInt()`
 
-### Game Frontend (React, минимальный)
+### Game Frontend (React, minimal)
 
 ```
 ┌─────────────────────────────────────────┐
@@ -109,9 +109,9 @@ Response: {
 
 ---
 
-## Часть 2: RGS Platform (Интеграционный слой)
+## Part 2: RGS Platform (Integration Layer)
 
-RGS принимает запросы от игры и общается с оператором.
+RGS receives requests from the game and communicates with the operator.
 
 ### RGS API
 
@@ -135,7 +135,7 @@ Response: { success: boolean, balance: number }
 
 ### Operator Adapter
 
-Абстракция для разных операторов:
+Abstraction for different operators:
 
 ```typescript
 export abstract class BaseAdapter {
@@ -145,7 +145,7 @@ export abstract class BaseAdapter {
   abstract rollback(session: Session, transactionId: string): Promise<RollbackResult>;
 }
 
-// Реализация для конкретного оператора
+// Implementation for a specific operator
 export class DemoOperatorAdapter extends BaseAdapter {
   private generateHmac(body: object): string {
     const bodyString = JSON.stringify(body);
@@ -153,29 +153,29 @@ export class DemoOperatorAdapter extends BaseAdapter {
   }
 
   async bet(session, amount, roundId) {
-    // 1. Проверить идемпотентность
-    // 2. Вызвать API оператора с HMAC
-    // 3. Сохранить транзакцию
-    // 4. Вернуть результат
+    // 1. Check idempotency
+    // 2. Call operator API with HMAC
+    // 3. Save transaction
+    // 4. Return result
   }
 }
 ```
 
-### Ключевые требования RGS:
+### Key RGS Requirements:
 
-1. **Session Management** — Redis с TTL
-2. **Идемпотентность** — повторные запросы возвращают тот же результат
-3. **HMAC подпись** — все запросы к оператору подписаны
-4. **Retry механизм** — для win операций
-5. **Транзакции** — MongoDB для хранения истории
+1. **Session Management** — Redis with TTL
+2. **Idempotency** — repeated requests return the same result
+3. **HMAC signature** — all requests to operator are signed
+4. **Retry mechanism** — for win operations
+5. **Transactions** — MongoDB for history storage
 
 ---
 
-## Часть 3: Operator (Casino Backend)
+## Part 3: Operator (Casino Backend)
 
-Casino backend с Seamless Wallet API.
+Casino backend with Seamless Wallet API.
 
-### Wallet API (принимает запросы от RGS)
+### Wallet API (receives requests from RGS)
 
 ```typescript
 // POST /api/wallet/authenticate
@@ -199,14 +199,14 @@ Headers:  X-Signature: HMAC-SHA256
 Response: { balance: number }
 ```
 
-### Требования к Operator:
+### Operator Requirements:
 
-1. **HMAC валидация** — проверка подписи входящих запросов
-2. **Player Wallet** — MongoDB schema для баланса
-3. **Идемпотентность** — transactionId как ключ
-4. **Атомарность** — MongoDB transactions для bet/win
+1. **HMAC validation** — verify incoming request signatures
+2. **Player Wallet** — MongoDB schema for balance
+3. **Idempotency** — transactionId as key
+4. **Atomicity** — MongoDB transactions for bet/win
 
-### Casino UI (минимальный)
+### Casino UI (minimal)
 
 ```
 ┌─────────────────────────────────────────┐
@@ -222,27 +222,27 @@ Response: { balance: number }
 └─────────────────────────────────────────┘
 ```
 
-При клике на игру → открывается iframe с Game UI.
+When clicking on a game → opens iframe with Game UI.
 
 ---
 
-## Часть 4: Интеграция (Всё вместе)
+## Part 4: Integration (Everything Together)
 
-### Полный флоу игры:
+### Full Game Flow:
 
 ```
-1. Player открывает Casino UI
-2. Player кликает "Dice"
-3. Casino создаёт токен и открывает Game UI в iframe
+1. Player opens Casino UI
+2. Player clicks "Dice"
+3. Casino creates token and opens Game UI in iframe
 4. Game UI → Game Backend → RGS → Operator (authenticate)
-5. Player делает ставку
+5. Player places bet
 6. Game UI → Game Backend → RGS → Operator (bet)
-7. Game генерирует результат (RNG)
+7. Game generates result (RNG)
 8. Game UI → Game Backend → RGS → Operator (win)
-9. Player видит результат и обновлённый баланс
+9. Player sees result and updated balance
 ```
 
-### Launch URL формат:
+### Launch URL Format:
 
 ```
 https://game.example.com/dice?token={TOKEN}&operator={OPERATOR_CODE}
@@ -250,7 +250,7 @@ https://game.example.com/dice?token={TOKEN}&operator={OPERATOR_CODE}
 
 ---
 
-## Инфраструктура
+## Infrastructure
 
 ### Docker Compose
 
@@ -299,7 +299,7 @@ services:
     ports: ["4001:4001"]
 ```
 
-### Структура проекта
+### Project Structure
 
 ```
 project/
@@ -317,188 +317,188 @@ project/
 
 ---
 
-## Ключевые проверки (что должно работать)
+## Key Checks (What Should Work)
 
 ### 1. End-to-End Flow
 ```
-1. Открыть Casino UI → залогиниться
-2. Кликнуть на игру Dice
-3. Игра открывается с балансом игрока
-4. Сделать ставку → баланс уменьшился
-5. Получить результат → если выигрыш, баланс увеличился
-6. Закрыть игру → баланс в Casino UI обновился
+1. Open Casino UI → login
+2. Click on Dice game
+3. Game opens with player balance
+4. Place bet → balance decreased
+5. Get result → if win, balance increased
+6. Close game → balance in Casino UI updated
 ```
 
 ### 2. HMAC Validation (RGS → Operator)
 ```
-1. RGS отправляет запрос без X-Signature → Operator отвечает 401
-2. RGS отправляет с неправильной подписью → 401
-3. RGS отправляет с правильной подписью → 200
+1. RGS sends request without X-Signature → Operator responds 401
+2. RGS sends with wrong signature → 401
+3. RGS sends with correct signature → 200
 ```
 
-### 3. Идемпотентность
+### 3. Idempotency
 ```
 1. Bet (txn_001) → balance = 900
-2. Bet (txn_001) повторно → balance = 900 (не 800!)
+2. Bet (txn_001) again → balance = 900 (NOT 800!)
 3. Win (txn_002) → balance = 1090
-4. Win (txn_002) повторно → balance = 1090 (не 1280!)
+4. Win (txn_002) again → balance = 1090 (NOT 1280!)
 ```
 
 ### 4. Rollback
 ```
 1. Bet (txn_001) → balance = 900
-2. Ошибка в игре
+2. Error in game
 3. Rollback (txn_001) → balance = 1000
 ```
 
 ### 5. Session Expiry
 ```
-1. Создать сессию
-2. Подождать > TTL (например, 30 минут)
-3. Попытка play → ошибка "Session expired"
+1. Create session
+2. Wait > TTL (e.g., 30 minutes)
+3. Attempt play → error "Session expired"
 ```
 
 ---
 
-## Требования к процессу разработки
+## Development Process Requirements
 
-### Обязательно
+### Mandatory
 
-1. **CLAUDE.md файл в корне проекта**
-   - Архитектура всей системы
-   - API контракты каждого сервиса
-   - Команды для запуска
-   - Инструкции для Claude Code
+1. **CLAUDE.md file in project root**
+   - Full system architecture
+   - API contracts for each service
+   - Commands to run
+   - Instructions for Claude Code
 
-2. **Git история**
-   - Осмысленные коммиты
-   - Минимум 15-20 коммитов (по всем сервисам)
+2. **Git history**
+   - Meaningful commits
+   - Minimum 15-20 commits (across all services)
 
 3. **README.md**
-   - Как запустить (docker-compose up)
-   - Как протестировать
-   - Описание архитектуры
+   - How to run (docker-compose up)
+   - How to test
+   - Architecture description
 
-### Желательно
+### Desirable
 
-- Unit тесты для критичных модулей
-- Swagger документация
-- Логирование транзакций
+- Unit tests for critical modules
+- Swagger documentation
+- Transaction logging
 
 ---
 
-## Критерии оценки
+## Evaluation Criteria
 
-### 1. Работа с Claude Code (30%)
+### 1. Working with Claude Code (30%)
 
-| Критерий | Описание | Баллы |
-|----------|----------|-------|
-| Промпт-инжиниринг | Декомпозиция задач, формулировка промптов | 0-8 |
-| Код-ревью AI кода | Проверка и исправление сгенерированного кода | 0-7 |
-| Архитектурное планирование | Использование AI для проектирования | 0-8 |
-| CLAUDE.md качество | Полезность файла для AI-ассистента | 0-7 |
+| Criterion | Description | Points |
+|-----------|-------------|--------|
+| Prompt engineering | Task decomposition, prompt formulation | 0-8 |
+| AI code review | Checking and fixing generated code | 0-7 |
+| Architectural planning | Using AI for design | 0-8 |
+| CLAUDE.md quality | Usefulness of the file for AI assistant | 0-7 |
 
 ### 2. Game Provider (15%)
 
-| Критерий | Описание | Баллы |
-|----------|----------|-------|
-| Игровая логика | RNG, расчёт выигрыша, RTP | 0-8 |
-| Game API | init, play endpoints работают | 0-7 |
+| Criterion | Description | Points |
+|-----------|-------------|--------|
+| Game logic | RNG, win calculation, RTP | 0-8 |
+| Game API | init, play endpoints work | 0-7 |
 
 ### 3. RGS Platform (25%)
 
-| Критерий | Описание | Баллы |
-|----------|----------|-------|
-| Operator Adapter | HMAC, вызовы API оператора | 0-10 |
-| Session Management | Redis, TTL, валидация | 0-8 |
-| Идемпотентность | Дедупликация транзакций | 0-7 |
+| Criterion | Description | Points |
+|-----------|-------------|--------|
+| Operator Adapter | HMAC, operator API calls | 0-10 |
+| Session Management | Redis, TTL, validation | 0-8 |
+| Idempotency | Transaction deduplication | 0-7 |
 
 ### 4. Operator (Casino) (20%)
 
-| Критерий | Описание | Баллы |
-|----------|----------|-------|
+| Criterion | Description | Points |
+|-----------|-------------|--------|
 | Wallet API | authenticate, bet, win, rollback | 0-10 |
-| HMAC валидация | Проверка входящих подписей | 0-5 |
-| Атомарность | MongoDB transactions | 0-5 |
+| HMAC validation | Incoming signature verification | 0-5 |
+| Atomicity | MongoDB transactions | 0-5 |
 
-### 5. Интеграция и инфраструктура (10%)
+### 5. Integration and Infrastructure (10%)
 
-| Критерий | Описание | Баллы |
-|----------|----------|-------|
-| Docker Compose | Все сервисы запускаются | 0-5 |
-| End-to-End Flow | Полный цикл работает | 0-5 |
+| Criterion | Description | Points |
+|-----------|-------------|--------|
+| Docker Compose | All services start | 0-5 |
+| End-to-End Flow | Full cycle works | 0-5 |
 
-**Максимум: 100 баллов**
-
----
-
-## Что предоставить
-
-1. **GitHub репозиторий**
-2. **Скринкаст** (10-15 минут):
-   - Запуск через docker-compose
-   - Демонстрация Casino UI → запуск игры
-   - Игровой процесс (bet → win/lose)
-   - Обновление баланса в Casino
-   - Показать rollback (если возможно)
-3. **Краткий отчёт** (1-2 страницы):
-   - Какие промпты использовал для Claude Code
-   - Архитектурные решения
-   - Проблемы и как решал
-   - Что бы улучшил при наличии времени
+**Maximum: 100 points**
 
 ---
 
-## Технологический стек
+## What to Submit
 
-### Backend (все сервисы)
+1. **GitHub repository**
+2. **Screencast** (10-15 minutes):
+   - Launch via docker-compose
+   - Demo Casino UI → launch game
+   - Gameplay (bet → win/lose)
+   - Balance update in Casino
+   - Show rollback (if possible)
+3. **Brief report** (1-2 pages):
+   - What prompts you used for Claude Code
+   - Architectural decisions
+   - Problems and how you solved them
+   - What you would improve with more time
+
+---
+
+## Technology Stack
+
+### Backend (all services)
 - NestJS 10+
 - TypeScript 5+
 - MongoDB + Mongoose
 - Redis + ioredis
-- crypto (для HMAC и RNG)
+- crypto (for HMAC and RNG)
 
-### Frontend (Game UI и Casino UI)
-- React 18+ или Vue 3+
+### Frontend (Game UI and Casino UI)
+- React 18+ or Vue 3+
 - TypeScript
 - Vite
-- Любой UI kit (или чистый CSS)
+- Any UI kit (or plain CSS)
 
-### Инфраструктура
+### Infrastructure
 - Docker + Docker Compose
 - Node.js 20+
 
 ---
 
-## Бонусные задания (опционально)
+## Bonus Tasks (Optional)
 
-- [ ] Вторая игра (Coin Flip)
-- [ ] Второй оператор с другим API форматом
-- [ ] Провейбли Fair (показать seed после игры)
-- [ ] WebSocket для real-time баланса
-- [ ] История транзакций в Casino UI
+- [ ] Second game (Coin Flip)
+- [ ] Second operator with different API format
+- [ ] Provably Fair (show seed after game)
+- [ ] WebSocket for real-time balance
+- [ ] Transaction history in Casino UI
 - [ ] Rate limiting
 
 ---
 
 ## FAQ
 
-**Q: Нужна красивая графика в игре?**
-A: Нет. UI минимальный — кнопки и текст. Фокус на интеграции.
+**Q: Do I need beautiful graphics in the game?**
+A: No. UI is minimal — buttons and text. Focus on integration.
 
-**Q: Можно объединить сервисы?**
-A: Нет. Game, RGS и Operator должны быть отдельными сервисами.
+**Q: Can I combine services?**
+A: No. Game, RGS, and Operator must be separate services.
 
-**Q: Какой формат HMAC?**
-A: `HMAC-SHA256(secretKey, JSON.stringify(body))` в hex, header `X-Signature`.
+**Q: What is the HMAC format?**
+A: `HMAC-SHA256(secretKey, JSON.stringify(body))` in hex, header `X-Signature`.
 
-**Q: Можно использовать другие AI кроме Claude Code?**
-A: Нет, только Claude Code. Это ключевая часть оценки.
+**Q: Can I use other AI besides Claude Code?**
+A: No, only Claude Code. This is a key part of the evaluation.
 
-**Q: Что если не успею за 2-3 дня?**
-A: Приоритеты:
-   1. RGS + Operator интеграция (КРИТИЧНО)
-   2. Game Provider (важно)
-   3. UI (минимум — работающие кнопки)
+**Q: What if I don't finish in 2-3 days?**
+A: Priorities:
+   1. RGS + Operator integration (CRITICAL)
+   2. Game Provider (important)
+   3. UI (minimum — working buttons)
 
-   Лучше меньше функций, но работающий E2E flow.
+   Better fewer features, but a working E2E flow.
